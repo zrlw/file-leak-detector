@@ -1,6 +1,6 @@
 # file-leak-detector for WebSphere Application Server 8.5 (IBM JDK 1.6)
 Java agent that detects file handle leak for WebSpere Application Server 8.5 (IBM JDK 1.6) <br>
-by Lao Wei(zrlw@sina.com) on Oct 01 17:48:00 GMT+8 2019 <br>
+by Lao Wei(zrlw@sina.com) on Oct 01 21:15:00 GMT+8 2019 <br>
 # Build Steps at Eclipse with m2e plugin
 1. after git clone the project, you should change java.home in pom.xml to your Oracle JDK's JRE directory. <br>
 2. Maven - Update Project... - OK <br>
@@ -26,12 +26,12 @@ Built-By: your-name
 ```
 9. uncompress asm6 & args4j jar to a temp directory from your local repository which can be found in project build path. <br>
 10. merge org directory of asm6 & args4j from the temp directory into the exported jar. <br>
-11. copy the exported jar to the machine whill run WebSphere. <br>  
+11. copy the exported jar to the machine which run the WebSphere Application Server. <br>  
 12. logon WAS administrator console, set Java virtual machine of the WebSpere Application Server to debug mode. <br>
 ---------------------------------------------------------------------------------------------------------------------------------
 Detector Method A: <br>
 ```
-1. add -javaagent:<your-path>/<your-jar>=http=<your-port>,host=<ip-of-WAS-machine> in JVM gerneral parameters.
+1. add -javaagent:<your-path>/<your-jar>=http=<your-port>,host=<ip-of-WAS-machine> in JVM general parameters.
 2. start WAS
 check <websphere_profile_home>/<node>/logs/<server>/native_stderr.log for error.
 ```
