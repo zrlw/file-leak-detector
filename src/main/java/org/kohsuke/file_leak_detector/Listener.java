@@ -17,7 +17,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.Pipe;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.nio.file.Path;
+// import java.nio.file.Path; // IBM JDK 1.6 do not have Path class.
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -305,9 +305,11 @@ public class Listener {
         }
     }
 
+    /* IBM JDK 1.6 do not have Path class, and it's FileChannel do not have open(...) calls
     public static synchronized void open_filechannel(FileChannel fileChannel, Path path) {
         open(fileChannel, path.toFile());
     }
+    */
 
     public static synchronized void openSelector(Object _this) {
         if (_this instanceof Selector) {

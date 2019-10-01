@@ -84,7 +84,8 @@ public class Main {
 
         ClassLoader cl = wrapIntoClassLoader(toolsJar);
         try {
-            return cl.loadClass("com.sun.tools.attach.VirtualMachine");
+            // return cl.loadClass("com.sun.tools.attach.VirtualMachine");
+            return cl.loadClass("com.ibm.tools.attach.VirtualMachine"); // IBM JDK 1.6
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException("Unable to find tools.jar at "+toolsJar+" --- you need to run this tool with a JDK",e);
         }

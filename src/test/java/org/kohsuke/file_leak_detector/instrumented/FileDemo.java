@@ -9,7 +9,7 @@ import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.channels.FileChannel;
-import java.nio.file.StandardOpenOption;
+// import java.nio.file.StandardOpenOption; // IBM JDK 1.6 do not have StandardOpenOption
 
 import org.junit.After;
 import org.junit.Before;
@@ -57,6 +57,7 @@ public class FileDemo {
         assertTrue(traceOutput.contains("Closed " + tempFile));
     }
 
+    /* IBM JDK 1.6 do not have FileChannel.open(...)
     @Test
     public void openCloseFileChannel() throws Exception {
         FileChannel fileChannel = FileChannel.open(tempFile.toPath(), StandardOpenOption.APPEND);
@@ -69,6 +70,7 @@ public class FileDemo {
         assertTrue(traceOutput.contains("Opened " + tempFile));
         assertTrue(traceOutput.contains("Closed " + tempFile));
     }
+    */
 
     private static FileRecord findFileRecord(File file) {
         for (Record record : Listener.getCurrentOpenFiles()) {

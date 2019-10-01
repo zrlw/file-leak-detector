@@ -24,7 +24,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.spi.AbstractInterruptibleChannel;
 import java.nio.channels.spi.AbstractSelectableChannel;
 import java.nio.channels.spi.AbstractSelector;
-import java.nio.file.Path;
+// import java.nio.file.Path; // IBM JDK 1.6 do not have Path class.
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -55,6 +55,7 @@ public class AgentMain {
     
     public static void premain(String agentArguments, Instrumentation instrumentation) throws Exception {
         int serverPort = -1;
+        String serverHost = "localhost";
         
         if(agentArguments!=null) {
             // used by Main to prevent the termination of target JVM
@@ -76,10 +77,13 @@ public class AgentMain {
                     Listener.TRACE = new PrintWriter(System.err);
                 } else
                 if(t.equals("strong")) {
-                    Listener.makeStrong();
+                    Listener.makeStrong();                
                 } else
                 if(t.startsWith("http=")) {
                     serverPort = Integer.parseInt(t.substring(t.indexOf('=')+1));
+                } else
+                if(t.startsWith("host=")) {
+                      serverHost = t.substring(t.indexOf('=')+1);
                 } else
                 if(t.startsWith("trace=")) {
                     Listener.TRACE = new PrintWriter(new FileOutputStream(t.substring(6)));
@@ -125,7 +129,9 @@ public class AgentMain {
             }
         }
 
-        Listener.EXCLUDES.add("sun.nio.ch.PipeImpl$Initializer$LoopbackConnector.run");
+        // Listener.EXCLUDES.add("sun.nio.ch.PipeImpl$Initializer$LoopbackConnector.run");
+        // sun.nio.ch.PipeImpl$Initializer in IBM JDK 1.6 do not have LoopbackConnector, but have run() call
+        Listener.EXCLUDES.add("sun.nio.ch.PipeImpl$Initializer.run");
         System.err.println("File leak detector installed");
 
         // Make sure the ActivityListener is loaded to prevent recursive death in instrumentation
@@ -142,7 +148,7 @@ public class AgentMain {
                 ZipFile.class,
                 AbstractSelectableChannel.class,
                 AbstractInterruptibleChannel.class,
-                FileChannel.class,
+                // FileChannel.class,  // IBM JDK 1.6's FileChannel do not have open file function
                 AbstractSelector.class
                 );
 
@@ -153,13 +159,13 @@ public class AgentMain {
 //                ServerSocket.class);
 
         if (serverPort>=0)
-            runHttpServer(serverPort);
+            runHttpServer(serverHost, serverPort);
     }
 
-    private static void runHttpServer(int port) throws IOException {
+    private static void runHttpServer(String host, int port) throws IOException {
         final ServerSocket ss = new ServerSocket();
-        ss.bind(new InetSocketAddress("localhost", port));
-        System.err.println("Serving file leak stats on http://localhost:"+ss.getLocalPort()+"/ for stats");
+        ss.bind(new InetSocketAddress(host, port));
+        System.err.println("Serving file leak stats on http://" + host + ":"+ss.getLocalPort()+"/ for stats");
         final ExecutorService es = Executors.newCachedThreadPool(new ThreadFactory() {
             public Thread newThread(Runnable r) {
                 Thread t = new Thread(r);
@@ -207,6 +213,7 @@ public class AgentMain {
         System.err.println("                  we have N descriptors open.");
         System.err.println("  http=PORT     - Run a mini HTTP server that you can access to get stats on demand");
         System.err.println("                  Specify 0 to choose random available port, -1 to disable, which is default.");
+        System.err.println("  host=IP       - Set host IP address of HTTP server, localhost is default.");
         System.err.println("  strong        - Don't let GC auto-close leaking file descriptors");
         System.err.println("  listener=S    - Specify the fully qualified name of ActivityListener class to activate from beginning");
         System.err.println("  dumpatshutdown- Dump open file handles at shutdown");
@@ -224,9 +231,11 @@ public class AgentMain {
             /*
              * Detect the files opened via FileChannel.open(...) calls
              */
+            /* IBM JDK 1.6 do not have FileChannel.open(...) calls
             new ClassTransformSpec(FileChannel.class,
                     new ReturnFromStaticMethodInterceptor("open",
                             "(Ljava/nio/file/Path;Ljava/util/Set;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/channels/FileChannel;", 4, "open_filechannel", FileChannel.class, Path.class)),
+            */
             /*
              * Detect new Pipes
              */
@@ -268,11 +277,13 @@ public class AgentMain {
                     new CloseInterceptor("socketClose")
             ),
             // Later versions of the JDK abstracted out the parts of PlainSocketImpl above into a super class
+            /* IBM JDK 1.6 do not have java.net.AbstractPlainSocketImpl 
             new ClassTransformSpec("java/net/AbstractPlainSocketImpl",
                 new OpenSocketInterceptor("create", "(Z)V"),
                 new AcceptInterceptor("accept","(Ljava/net/SocketImpl;)V"),
                 new CloseInterceptor("socketClose")
             ),
+            */
             new ClassTransformSpec("sun/nio/ch/SocketChannelImpl",
                     new OpenSocketInterceptor("<init>", "(Ljava/nio/channels/spi/SelectorProvider;Ljava/io/FileDescriptor;Ljava/net/InetSocketAddress;)V"),
                     new OpenSocketInterceptor("<init>", "(Ljava/nio/channels/spi/SelectorProvider;)V"),

@@ -66,6 +66,7 @@ public class SocketDemo {
         es.shutdownNow();
     }
 
+    /* IBM JDK 1.6 do not have ServerSocketChannel.bind(...)
     @Test
     public void testSocketChannelLeakDetection() throws IOException, InterruptedException {
 
@@ -103,6 +104,7 @@ public class SocketDemo {
         assertEquals(0, getSocketChannels());
         es.shutdownNow();
     }
+    */
 
     @Test
     public void testSocketLeakDetection() throws IOException, InterruptedException {
